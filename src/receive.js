@@ -1,16 +1,19 @@
 // DOM elements
 const pulseGraphDiv = document.getElementById('pulseGraphDiv')
-
 /// BLE things, mainly for debug
 var device, server, pulseService, pulseCharacteristic
-var pData=[];
+var vis=[], ir=[], pData=[];
 
 function pulseChanged(evt)
 {
 	var raw = evt.target.value
-    var pulseData = new Int8Array(raw.buffer)
-    pData.push(pulseData[0]);
+    var pulseData = new Int16Array(raw.buffer)
+	console.log(pulseData);
+    vis.push(pulseData[0]);
+	ir.push(pulseData[1]);
+	
 }
+
 function Sampling(start)
 {
 	pulseCharacteristic.writeValue(Uint8Array.of(start))
@@ -18,15 +21,16 @@ function Sampling(start)
 /// the function executing at requestAnimationFrame.
 /// otherwise 80Hz update rate would lock up my browser (I guess depends on screen refresh rate)
 function step() {
-	if (pData.length) {
+	if (vis.length) {
         Plotly.extendTraces(
             pulseGraphDiv,
             {
-                y: [pData],
+                y: [vis, ir],
             },
-            [0]
+            [0, 1]
         );
-        pData.length = 0;
+        vis.length = 0;
+		ir.length = 0;
     }
     window.requestAnimationFrame(step)
 }
@@ -77,7 +81,13 @@ function clearIt() {
         type: 'scattergl',
         mode: 'lines',
         line: { color: '#00f' },
-        name: 'x'
+        name: 'Vis'
+    }, {
+        y: [],
+        type: 'scattergl',
+        mode: 'lines',
+        line: { color: '#0f0' },
+        name: 'IR'
     }], { title: 'Pulse Data' });
 }
 window.requestAnimationFrame(step)
