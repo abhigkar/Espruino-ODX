@@ -14,9 +14,20 @@ function pulseChanged(evt)
 	
 }
 
+function ControlLed(ledOn){
+	let cmd = new Int8Array(2);
+	cmd[0] = 0x02;
+	cmd[1] = ledOn ? 0x01 : 0x00;
+	pulseCharacteristic.writeValue(cmd)
+	//pulseCharacteristic.writeValue(Uint8Array.of(start))
+}
+
 function Sampling(start)
 {
-	pulseCharacteristic.writeValue(Uint8Array.of(start))
+	let cmd = new Int8Array(2);
+	cmd[0] = 0x01;
+	cmd[1] = start ? 0x01 : 0x00;
+	pulseCharacteristic.writeValue(cmd)
 }
 /// the function executing at requestAnimationFrame.
 /// otherwise 80Hz update rate would lock up my browser (I guess depends on screen refresh rate)

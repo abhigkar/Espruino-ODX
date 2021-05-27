@@ -5,6 +5,11 @@ var i2cAddr = '0x5a';
 var i2c = I2C1;
 i2c.setup({ sda: 10, scl: 9 });
 
+var debug = 1;
+const l = (msg)=>{
+	if(debug) console.log( msg);
+}
+
 function getReg(reg, len){
   if(len==undefined) len=1;
     i2c.writeTo(i2cAddr, reg);
@@ -113,7 +118,7 @@ function getSensorData()
    //let od_ir=-0.344*Math.log(test_ir)+3.3413;
 
    //return 0.5*(od_vreset()is+od_ir);
-  return data;
+  return new Int16Array(data).buffer;
 }
 
 function ledOff()
@@ -152,8 +157,23 @@ function updatePulseData() {
   });
 }
 
+function executeCommand(cmd, arg){
+    l(cmd);l(arg);
+	switch(cmd){
+		case 1: //control command for sampling
+			start(arg);
+			break;
+		case 2: //control command for led
+			arg == 1?ledOn() : ledOff();
+			break;
+	}
+}
+
 function onInit() {
   initPulseSensor();
+  //BLE Connected, queueing BLE restart for later
+  
+  
   // on connect / disconnect blink the green / red LED turn on / off the magnetometer
   //NRF.on('connect', function() {Puck.magOn(magRate); digitalPulse(LED2, 1, 100)})
   //NRF.on('disconnect', function() {Puck.magOff(); digitalPulse(LED1, 1, 100)})
@@ -166,9 +186,9 @@ function onInit() {
 		writable : true,
         value: [getPulseData()],
 		onWrite : function(evt) {
-			var n = evt.data[0] / 255;
-			start(evt.data[0]);
-            console.log(evt.data[0]);
+			var cmd = evt.data[0]; ///255??
+			var arg = evt.data[1];
+			executeCommand(cmd,arg);
 		  }
       }
     }
