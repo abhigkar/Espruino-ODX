@@ -6,9 +6,10 @@ var i2c = I2C1;
 i2c.setup({ sda: 10, scl: 9 });
 
 var debug = 1;
+let sensorSetting = 11;
 const l = (msg)=>{
 	if(debug) console.log( msg);
-}
+};
 
 function getReg(reg, len){
   if(len==undefined) len=1;
@@ -22,7 +23,7 @@ function setReg(reg, val){
 
 function readParam(addr){
     i2c.writeTo(i2cAddr, [0x18, (0x80 | addr)]);//QUERY
-    return  getReg(0x2E);//PARAM_RD
+    return  getReg(0x2E,1);//PARAM_RD
 }
 
 function writeParam(addr, val){
@@ -31,14 +32,14 @@ function writeParam(addr, val){
 }
 
 function write_cmd(cmd) {
-    let old_value = getReg(0x20);//REG_RESPONSE
+    let old_value = getReg(0x20,1);//REG_RESPONSE
     setReg(0x18, cmd);//COMMAND
     if (cmd == 0x01) {
         return;
     }
     let i = 0;
     var timeout=25;
-    while (--timeout && getReg(0x20) == old_value);
+    while (--timeout && getReg(0x20,1) == old_value);
 }
 
 function softResetDevice(){
@@ -74,7 +75,7 @@ function initPulseSensor()
   // each LED has 16 possible (0-F in hex) possible settings
   setReg(0x10, 0x02);//PS_LED3
   setReg(0x0F, 0x00);//PS_LED21 this powers off the green leds of the ID107HR
-  console.log( "PS_LED21 = ", getReg(0x0F)[0].toString(16));//PS_LED21
+  console.log( "PS_LED21 = ", getReg(0x0F,1)[0].toString(16));//PS_LED21
   console.log("CHLIST = ",readParam(0x01)[0].toString(16));//PARAM_CH_LIST
   writeParam(0x01, 0x77);//PARAM_CH_LIST all measurements on
   // increasing PARAM_PS_ADC_GAIN will increase the LED on time and ADC window
@@ -98,9 +99,32 @@ function initPulseSensor()
 
   setReg(0x18, 0b00001111);     //  command, PSALS_AUTO_Cmd starts an autonomous read loop
 
-  console.log("CHIP_STAT= ", getReg(0x30)[0].toString(16));//CHIP_STAT
+  console.log("CHIP_STAT= ", getReg(0x30,1)[0].toString(16));//CHIP_STAT
 }
 
+
+
+function getALSData(){
+    return getReg(0x22,2);
+}
+
+function getIRData(){
+    return getReg(0x24,2);
+}
+
+function getPS1Data(){
+	return getReg(0x26,2);
+}
+function getPS2Data(){
+	return getReg(0x28,2);
+}
+function getPS3Data(){
+	return getReg(0x2A,2);
+}
+
+function getAllReadings(){
+	return getReg(0x22,10);
+}
 
 function getSensorData()
 {
@@ -109,7 +133,7 @@ function getSensorData()
    let visHIGH = getReg(0x23,1);//ALS_VIS_DATA01
 
    let irLOW = getReg(0x24,1);//ALS_IR_DATA0
-   let irHIGH = getReg(0x25);//ALS_IR_DATA1
+   let irHIGH = getReg(0x25,1);//ALS_IR_DATA1
 
    data[0] = (visHIGH << 8) | visLOW;
    data[1] = (irHIGH << 8) | irLOW;
@@ -119,6 +143,18 @@ function getSensorData()
 
    //return 0.5*(od_vreset()is+od_ir);
   return new Int16Array(data).buffer;
+}
+
+function getSensorDataX()
+{
+   let test_vis =getReg(0x22,1)[0]+256*getReg(0x23,1)[0];//ALS_VIS_DATA0/1
+   let test_ir =getReg(0x24,1)[0]+256*getReg(0x25,1)[0];//ALS_IR_DATA0/1
+
+   let od_vis=-0.396*Math.log(test_vis)+3.1196;
+   let od_ir=-0.344*Math.log(test_ir)+3.3413;
+
+   //return 0.5*(od_vreset()is+od_ir);
+  return new Int16Array([test_vis, test_ir]);
 }
 
 function ledOff()
@@ -145,6 +181,10 @@ function start(answer)
     }
 }
 
+function setPhotoDioad(setting){//000XXXXX 1st-vis, 2nd-ir, 3:5-ps1:ps3
+  sensorSetting = setting;
+}
+
 function updatePulseData() {
   NRF.updateServices({
     'f8b23a4d-89ad-4220-8c9f-d81756009f0e': {
@@ -164,16 +204,18 @@ function executeCommand(cmd, arg){
 			start(arg);
 			break;
 		case 2: //control command for led
-			arg == 1?ledOn() : ledOff();
+			if(arg == 1) ledOn(); else ledOff();
 			break;
+      case 3:// photo dioad 
+            setPhotoDioad(arg);
+            break;
 	}
 }
 
 function onInit() {
   initPulseSensor();
   //BLE Connected, queueing BLE restart for later
-  
-  
+
   // on connect / disconnect blink the green / red LED turn on / off the magnetometer
   //NRF.on('connect', function() {Puck.magOn(magRate); digitalPulse(LED2, 1, 100)})
   //NRF.on('disconnect', function() {Puck.magOff(); digitalPulse(LED1, 1, 100)})
@@ -194,32 +236,22 @@ function onInit() {
     }
   });
 }
-function getSensorDataX()
-{
-   let test_vis =getReg(0x22,1)[0]+256*getReg(0x23,1)[0];//ALS_VIS_DATA0/1
-   let test_ir =getReg(0x24,1)[0]+256*getReg(0x25)[0];//ALS_IR_DATA0/1
 
-   let od_vis=-0.396*Math.log(test_vis)+3.1196;
-   let od_ir=-0.344*Math.log(test_ir)+3.3413;
 
-   //return 0.5*(od_vreset()is+od_ir);
-  return new Int16Array([test_vis, test_ir]);
-}
-
+let resetCounter=0;
 function getPulseData()
 {
-     let tdata =  generateSampleData();
- // console.log(tdata);
-	return tdata;
+  resetCounter++;
+  if(resetCounter>360){ resetCounter=0;}
+  if(resetCounter%10==0)E.kickWatchdog();
+
+  let data = new Int8Array(10);
+  if(sensorSetting & 1) data.set(getALSData(),0);
+  if(sensorSetting & 2) data.set(getIRData(),2);
+  if(sensorSetting & 4) data.set(getPS1Data(),4);
+  if(sensorSetting & 8) data.set(getPS2Data(),6);
+  if(sensorSetting & 16) data.set(getPS3Data(),8);
+
+  return data;
 }
-let angle=0;
-let amplitude=10;
-function generateSampleData()
-{
-    angle++;
-	if(angle>360){ angle=0;}
-    if(angle%10==0)E.kickWatchdog();
-    //console.log (Math.sin(angle * (Math.PI/180))*amplitude);
-	//return (Math.sin(angle * (Math.PI/180))*amplitude);	
-	return getSensorData();
-}
+

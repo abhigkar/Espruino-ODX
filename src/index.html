@@ -4,8 +4,8 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.5/css/bulma.css" />
-    <script src="https://cdn.plot.ly/plotly-latest.js"></script>
+    <link rel="stylesheet" href="css/bulma.css" />
+    <script src="libs/plotly-latest.js"></script>
 </head>
 
 <body>
@@ -13,14 +13,42 @@
     <button onclick="doIt()">Connect!</button>
 	<button onclick="disconnect()">Disconnect!</button>
     <button onclick="clearIt()">Clear the graphs!</button>
- 	<button onclick="Sampling(1)">Start sampling</button>
-	<button onclick="Sampling(0)">Stop sampling!</button>
+ 	
     <button onclick="ControlLed(1)">LED on</button>
     <button onclick="ControlLed(0)">LED off</button>
-    <hr />
-    <div id="pulseGraphDiv" style="width: 100%;"></div>
 	
-
+	<button onclick="Sampling(1)">Start sampling</button>
+	<button onclick="Sampling(0)">Stop sampling!</button>
+	
+    <hr />
+	<input type="radio" id="vison" name="vis" value="1" checked onClick="setPhotodetectorSelection(this);">
+	<label for="vison">Vis on</label>
+	<input type="radio" id="visoff" name="vis" value="0" onClick="setPhotodetectorSelection(this);">
+	<label for="visoff">Vis off</label>
+	<br/>
+	<input type="radio" id="iron" name="ir" value="1" checked onClick="setPhotodetectorSelection(this);">
+	<label for="iron">IR on</label>
+	<input type="radio" id="iroff" name="ir" value="0" onClick="setPhotodetectorSelection(this);">
+	<label for="iroff">IR off</label>
+	<br/>
+	<input type="radio" id="ps1on" name="ps1" value="1" checked onClick="setPhotodetectorSelection(this);">
+	<label for="ps1on">PS1 on</label>
+	<input type="radio" id="ps1off" name="ps1" value="0" onClick="setPhotodetectorSelection(this);">
+	<label for="ps1off">PS1 off</label>
+	<br/>
+	<input type="radio" id="ps2on" name="ps2" value="1" checked onClick="setPhotodetectorSelection(this);">
+	<label for="ps2on">PS2 on</label>
+	<input type="radio" id="ps2off" name="ps2" value="0" onClick="setPhotodetectorSelection(this);">
+	<label for="ps2off">PS2 off</label>
+	<br/>
+	<input type="radio" id="ps3on" name="ps3" value="1" checked onClick="setPhotodetectorSelection(this);">
+	<label for="ps3on">PS3 on</label>
+	<input type="radio" id="ps3off" name="ps3" value="0" onClick="setPhotodetectorSelection(this);">
+	<label for="ps3off">PS3 off</label>
+	<hr/>
+    
+	<div id="psDiv" style="width: 100%;"></div>
+<div id="visirDiv" style="width: 100%;"></div>
     <script src="receive.js"></script>
 </body>
 
