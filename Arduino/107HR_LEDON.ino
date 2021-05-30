@@ -37,7 +37,16 @@ unsigned long long lastSent = 0;
 
 
 
-
+//#define USE_SOFTWAREI2C
+//#ifdef USE_SOFTWAREI2C
+//#include <SoftwareI2C.h>
+//SoftwareI2C sWire(14, 16);
+//KX022<SoftwareI2C> acc(sWire);
+//#else
+//KX022<> acc(Wire);
+//KX022<TwoWire>
+//KX022 acc(acc); // TwoWire is the default class, so this is the same as above
+//#endif
 
 #define OLED_WIDTH 64
 #define OLED_HEIGHT 32
@@ -76,13 +85,9 @@ PulsePlug pulse (myBus);
 
 void setup()
 {
-
-  
-  pinMode(6, OUTPUT);
-
   Wire.begin();
 
-  bleSerial.setLocalName("LUX2021");
+  bleSerial.setLocalName("UART");
   bleSerial.begin();
   Serial.begin(9600);
   Serial.println(__FILE__);
@@ -136,55 +141,28 @@ void setup()
 
 void loop()
 {
+// Serial.print("IR Data1  ");
+ //Serial.println(pulse.getReg(PulsePlug::ALS_IR_DATA1));
+ //Serial.print("IR Data0  ");
+ //Serial.println(pulse.getReg(PulsePlug::ALS_IR_DATA0));
+  //Serial.print("VIS Data1  ");
+// Serial.println(pulse.getReg(PulsePlug::ALS_VIS_DATA1));
+if (!B1_isPressed & !digitalRead(PIN_BUTTON1)) // timer used for button debounce
+  {
+    page_num = (page_num + 1 < page_count)?page_num+1:0;
+  }
+  B1_isPressed = !digitalRead(PIN_BUTTON1);
   
- // digitalWrite(6,HIGH);
-  //delay(500);
-  
+  if (millis() - tPage > 20) // 20ms = 50Hz
+  {
+    tPage = millis();
+    draw_page(page_num);
+  }
 
- int test_vis =pulse.getReg(PulsePlug::ALS_VIS_DATA0)+256*pulse.getReg(PulsePlug::ALS_VIS_DATA1);
- int test_ir =pulse.getReg(PulsePlug::ALS_IR_DATA0)+256*pulse.getReg(PulsePlug::ALS_IR_DATA1);
- Serial.print("V_old ");
- Serial.print(test_vis);
- Serial.print(" Vis_new ");
- uint16_t* alsSensor = pulse.fetchALSData();
- Serial.println(alsSensor[0]);
- Serial.print("I_old ");
- Serial.print(test_ir);
- Serial.print(" IR_new ");
- Serial.println(alsSensor[1]);
-
- //bleSerial.print("V");
- bleSerial.print(alsSensor[0]);
- bleSerial.print(",");
- //bleSerial.print("R");
- bleSerial.print(alsSensor[1]);
- bleSerial.println();
-
-
-    char charVal[10]; 
-    float vis_new=alsSensor[0];
-    float ir_new=alsSensor[1];
-    
- oled.setCursor(5, 4); // points cursor to x=27 y=0
- oled.print("Vis");
- oled.setCursor(25, 4); // points cursor to x=27 y=0
- dtostrf(vis_new,5,0,charVal);
- oled.print(charVal);
-   // Serial.println(charVal);
-    
- oled.setCursor(5, 20); // points cursor to x=27 y=0
- oled.print("IR");
- oled.setCursor(25, 20); // points cursor to x=27 y=0
- dtostrf(ir_new,5,0,charVal);
- oled.print(charVal);
- oled.display(); 
-  
-  
- // digitalWrite(6,LOW);
-//  yield();
-  delay(2000); // show splash for 3s
-  oled.clear(PAGE); // Clear the display's internal memory
-  oled.clear(ALL);  // Clear the library's display buffer
+  yield();
+  delay(500); // show splash for 3s
+  //oled.clear(PAGE); // Clear the display's internal memory
+  //oled.clear(ALL);  // Clear the library's display buffer
 }
 
 
@@ -226,31 +204,46 @@ void page_startup()
 
 void page_accelerometer()
 {
-    
+  delay(500);
+  pulse.setReg(PulsePlug::PS_LED21, 0x11);
+
+    char fltBuf[5];
     char charVal[10]; 
-    uint16_t* alsSensor= pulse.fetchALSData();
-    float vis_new=alsSensor[0];
-    float ir_new=alsSensor[1];
+    //acc.getAccelXYZ(xyz);
+     float test_vis =pulse.getReg(PulsePlug::PS1_DATA0)+256*pulse.getReg(PulsePlug::PS1_DATA1);
+     float test_ir =pulse.getReg(PulsePlug::PS2_DATA0)+256*pulse.getReg(PulsePlug::PS2_DATA1);
     oled.clear();
     oled.setCursor(5, 4); // points cursor to x=27 y=0
     oled.print("Vis");
     oled.setCursor(25, 4); // points cursor to x=27 y=0
-    dtostrf(vis_new,5,0,charVal);
+    dtostrf(test_vis,5,0,charVal);
     oled.print(charVal);
-    oled.display();  
-
-    Serial.print("Vis_o ");
-    Serial.print(charVal);
-     
-     
+    Serial.print("V");
+    Serial.println(charVal);
+ 
+    //  delay(500);
     oled.setCursor(5, 20); // points cursor to x=27 y=0
     oled.print("IR");
     oled.setCursor(25, 20); // points cursor to x=27 y=0
-    dtostrf(ir_new,5,0,charVal);
-    oled.print(charVal);
-    Serial.print(" IR_o ");
-    Serial.println(charVal);
-    oled.display();  
+    float2chars(test_ir,fltBuf);
+   dtostrf(test_ir,5,0,charVal);
+   oled.print(charVal);
+       Serial.print("IR");
+   Serial.println(charVal);
+   oled.display();  
+    
+    int visc= test_vis;
+    int irc=test_ir;
+   
+  // bleSerial.print("V");
+   bleSerial.print(visc);
+   bleSerial.print(",");
+  //bleSerial.write(",");
+   //bleSerial.print("I");
+   bleSerial.println(irc);
+   pulse.setReg(PulsePlug::PS_LED21, 0x00);      // this powers off the green leds of the ID107HR
+  // delay(1500);
+    
 }
 
 void initPulseSensor() {
@@ -301,13 +294,12 @@ void initPulseSensor() {
 
   //  pulse.setReg(PulsePlug::PS_LED21, 0x38);      // LED current for 2 (IR1 - high nibble) & LEDs 1 (red - low nibble)
   //PSO2
-//   pulse.setReg(PulsePlug::PS_LED21, 0x00);      // this powers off the green leds of the ID107HR
 
 
-//  pulse.setReg(PulsePlug::PS_LED21, 0x11);
-    pulse.setReg(PulsePlug::PS_LED3, 0x02);
-  pulse.setReg(PulsePlug::PS_LED21, 0x00);      // this powers off the green leds of the ID107HR
 
+  pulse.setReg(PulsePlug::PS_LED21, 0x11);
+    pulse.setReg(PulsePlug::PS_LED3, 0x03);
+ //  pulse.setReg(PulsePlug::PS_LED21, 0x00);      // this powers off the green leds of the ID107HR
   Serial.print( "PS_LED21 = ");
 
   Serial.println(pulse.getReg(PulsePlug::PS_LED21), BIN);
@@ -328,7 +320,7 @@ void initPulseSensor() {
 
   // datasheet warns not to go beyond 4 because chip or LEDs may be damaged
 
-  pulse.writeParam(PulsePlug::PARAM_PS_ADC_GAIN, 0x00);
+  pulse.writeParam(PulsePlug::PARAM_PS_ADC_GAIN, 0x03);
 
 
 
