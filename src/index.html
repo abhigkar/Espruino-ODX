@@ -10,15 +10,14 @@
 
 <body>
 
-    <button onclick="doIt()">Connect!</button>
-	<button onclick="disconnect()">Disconnect!</button>
-    <button onclick="clearIt()">Clear the graphs!</button>
- 	
-    <button onclick="ControlLed(1)">LED on</button>
-    <button onclick="ControlLed(0)">LED off</button>
-	
-	<button onclick="Sampling(1)">Start sampling</button>
-	<button onclick="Sampling(0)">Stop sampling!</button>
+    <button id="btnConnect" onclick="connect()">Connect!</button>
+	<button id="btnDisconnect" onclick="disconnect()" disabled>Disconnect!</button>
+    <button id="btnLed" onclick="ControlLed(this);" value="1" disabled>LED on</button>
+	<button id="btnSampling" onclick="Sampling(this);" value="1" disabled>Start sampling</button>
+	<br/>
+    <button id="btnClear" onclick="clearIt()">Clear the graphs!</button>
+	<button id="btnGenerateCSV" onclick="generateCsvFromStorage()" disabled>Generate CSV</button>
+	<br/>
 	Device Name: <span id="devNameSpan" style="background-color:green;color:white"></span>
 	
     <hr />
@@ -53,6 +52,7 @@
 	<div id="ps3Div" style="width: 100%;"></div>
     <div id="visDiv" style="width: 100%;"></div>
 	<div id="irDiv" style="width: 100%;"></div>
+	<script src="storage.js"></script>
     <script src="receive.js"></script>
 </body>
 
