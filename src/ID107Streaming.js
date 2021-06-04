@@ -8,7 +8,7 @@ i2c.setup({ sda: 10, scl: 9 });
 var intervalId = 0;
 var debug = true;
 let sensorSetting = 31;
-
+let sampleInterval = 10;// default 10 ms
 const l = (msg) => {
   if (debug) console.log(msg);
 };
@@ -168,7 +168,7 @@ function ledOn() {
 function startSampling(answer) {
   if (answer == 1) {
     if (intervalId <= 0) {
-      intervalId = setInterval(updatePulseData, 10);
+      intervalId = setInterval(updatePulseData, sampleInterval);
       console.log("Timer setup", intervalId);
     }
   }
@@ -183,6 +183,15 @@ function startSampling(answer) {
 
 function setPhotoDioad(setting) {//000XXXXX 1st-vis, 2nd-ir, 3:5-ps1:ps3
   sensorSetting = setting;
+}
+
+function changeSampleInterval(rate){
+  startSampling(0);
+  sampleInterval = rate;
+  setTimeout(()=>{
+    startSampling(1);
+  },1000);
+  console.log("sample rate changed ", rate);
 }
 
 function updatePulseData() {
@@ -209,6 +218,9 @@ function executeCommand(cmd, arg) {
       break;
     case 3:// photo dioad 
       setPhotoDioad(arg);
+      break;
+    case 4://change sample rate
+      changeSampleInterval(arg);
       break;
   }
 }

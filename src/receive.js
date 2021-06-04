@@ -79,23 +79,6 @@ function Sampling(e) {
 	}
 }
 
-function setPhotodetectorSelection(data) {
-	document.querySelector('input[id="vison"]').checked = data[0] > 0;
-	document.querySelector('input[id="visoff"]').checked = !(data[0] > 0);
-
-	document.querySelector('input[id="iron"]').checked = data[1] > 0;
-	document.querySelector('input[id="iroff"]').checked = !(data[1] > 0);
-
-	document.querySelector('input[id="ps1on"]').checked = data[2] > 0;
-	document.querySelector('input[id="ps1off"]').checked = !(data[2] > 0);
-
-	document.querySelector('input[id="ps2on"]').checked = data[3] > 0;
-	document.querySelector('input[id="ps2off"]').checked = !(data[3] > 0);
-
-	document.querySelector('input[id="ps3on"]').checked = data[4] > 0;
-	document.querySelector('input[id="ps3off"]').checked = !(data[4] > 0);
-
-}
 
 function sendPhotodetectorSelection() {
 	if (device) {
@@ -116,9 +99,37 @@ function sendPhotodetectorSelection() {
 		let cmd = new Int8Array(2);
 		cmd[0] = 0x03;
 		cmd[1] = cmdBits;
-		console.log(cmdBits.toString(2));
 		pulseCharacteristic.writeValue(cmd)
 	}
+}
+
+function changeSampleRate(e){
+	let rate = e.value;
+	console.log(rate)
+	if (device) {
+		let cmd = new Int8Array(2);
+		cmd[0] = 0x04;
+		cmd[1] = rate;
+		pulseCharacteristic.writeValue(cmd)
+	}
+}
+
+function setPhotodetectorSelection(data) {
+	document.querySelector('input[id="vison"]').checked = data[0] > 0;
+	document.querySelector('input[id="visoff"]').checked = !(data[0] > 0);
+
+	document.querySelector('input[id="iron"]').checked = data[1] > 0;
+	document.querySelector('input[id="iroff"]').checked = !(data[1] > 0);
+
+	document.querySelector('input[id="ps1on"]').checked = data[2] > 0;
+	document.querySelector('input[id="ps1off"]').checked = !(data[2] > 0);
+
+	document.querySelector('input[id="ps2on"]').checked = data[3] > 0;
+	document.querySelector('input[id="ps2off"]').checked = !(data[3] > 0);
+
+	document.querySelector('input[id="ps3on"]').checked = data[4] > 0;
+	document.querySelector('input[id="ps3off"]').checked = !(data[4] > 0);
+
 }
 
 /// the function executing at requestAnimationFrame.

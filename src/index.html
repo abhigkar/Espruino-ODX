@@ -14,6 +14,12 @@
 	<button id="btnDisconnect" onclick="disconnect()" disabled>Disconnect!</button>
     <button id="btnLed" onclick="ControlLed(this);" value="1" disabled>LED on</button>
 	<button id="btnSampling" onclick="Sampling(this);" value="1" disabled>Start sampling</button>
+	<select id="ddlSampleRate" onchange="changeSampleRate(this);">
+		<option value="10">10 ms</option>
+		<option value="20">20 ms</opttion>
+		<option value="50">50 ms</option>
+		<option value="100">100 ms</option>
+	</select>
 	<br/>
     <button id="btnClear" onclick="clearIt()">Clear the graphs!</button>
 	<button id="btnGenerateCSV" onclick="generateCsvFromStorage()" disabled>Generate CSV</button>
