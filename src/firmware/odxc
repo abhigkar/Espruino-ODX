@@ -1,0 +1,258 @@
+/*const odxControllerService = "f8b23a4d-89ad-4220-8c9f-d81756009f0e";
+const odxCmdCharacteristic = "f8b23a4d-89ad-4220-8c9f-d81756009f0e";
+const odxDataCharacteristic = "f8b23a4d-89ad-4220-8c9f-d81756009f0a";
+const odxInfoCharacteristic = "f8b23a4d-89ad-4220-8c9f-d81756009f0b";
+*/
+const s = require("Storage");
+let settings;
+var pulse;
+let watchId = 0;
+let isStarted = false;
+function saveSettings() {
+    s.writeJSON("settings", settings);
+};
+function getSettings() {
+    if (s.readJSON("settings") == null) {
+        settings = { em: 0, mr: 50, psd: 3, psgn: 0, hspsr: 0, ird: 0, alsvisgn: 0, hsvr: 0, alsirgn: 0, hsirr: 0, hrps: 0, hrvis: 0, hrir: 0 };
+        saveSettings();
+    }
+    settings = s.readJSON("settings");
+    return settings;
+};
+
+function publishSensorSettings() {
+    let data = new Int8Array([settings.em, settings.mr, settings.psd, settings.psgn, settings.hspsr, settings.ird, settings.alsvisgn, settings.hsvr, settings.alsirgn, settings.hsirr, settings.hrps, settings.hrvis, settings.hrir]);
+    NRF.updateServices({
+        'f8b23a4d-89ad-4220-8c9f-d81756009f0e': {
+            'f8b23a4d-89ad-4220-8c9f-d81756009f0b': {
+                notify: true,
+                readable: true,
+                value: [data]
+            }
+        }
+    });
+}
+
+
+function initPulseSensotFromSettings(){
+    let st = getSettings();
+    pulse.enableMeasurements(st.em);
+    pulse.setMeasurementRate(st.em);
+    pulse.selectPsDiode(st.psd);
+    pulse.setPsAdcGain(st.psgn);
+    pulse.enableHighSignalPsRange(st.hspsr);
+    pulse.selectIrDiode(st.ird);
+    pulse.setAlsVisAdcGain(st.alsvisgn);
+    pulse.enableHighSignalVisRange(st.hsvr);
+    pulse.setAlsIrAdcGain(st.alsirgn);
+    pulse.enableHighSignalIrRange(st.hsirr);
+    pulse.enableHighResolutionPs(st.hrps);
+    pulse.enableHighResolutionVis(st.hrvis);
+    pulse.enableHighResolutionIr(st.hrir);
+}
+
+
+function executeCommand(cmd, arg) {
+    console.log(cmd);
+    console.log(arg);
+    switch (cmd) {
+        case 0x01:
+            if (arg[0] >= 0 && arg[0] <= 5) {
+                pulse.setPsAdcGain(arg[0]);
+                settings.psgn = arg[0];
+            }
+            break;
+        case 0x02:
+            if (arg[0] >= 0 && arg[0] <= 7) {
+                pulse.setAlsVisAdcGain(arg[0]);
+                settings.alsvisgn = arg[0];
+            }
+            break;
+        case 0x03:
+            if (arg[0] >= 0 && arg[0] <= 7) {
+                pulse.setAlsIrAdcGain(arg[0]);
+                settings.alsirgn = arg[0];
+            }
+            break;
+        case 0x04:
+            pulse.setMeasurementRate(arg[0]); // wake and reads per seconds
+            settings.mr = arg[0];
+            break;
+        case 0x05:
+            //small large
+            if (arg[0] == 0x01) {
+                pulse.selectPsDiode(arg[1]);
+                settings.psd = arg[1];
+            }
+            else {
+                pulse.selectIrDiode(arg[1]);
+                settings.ird = arg[1];
+            }
+            break;
+        case 0x06:
+            (arg[0] == 0x01) ? pulse.enableHighResolutionPs() : pulse.disableHighResolutionPs();
+            settings.hrps = arg[0];
+            break;
+        case 0x07:
+            (arg[0] == 0x01) ? pulse.enableHighResolutionVis() : pulse.disableHighResolutionVis();
+            settings.hrvis = arg[0];
+            break;
+        case 0x08:
+            (arg[0] == 0x01) ? pulse.enableHighResolutionIr() : pulse.disableHighResolutionIr();
+            settings.hrir = arg[0];
+            break;
+        case 0x09:
+            (arg[0] == 0x01) ? pulse.enableHighSignalPsRange() : pulse.disableHighSignalPsRange();
+            settings.hspsr = arg[0];
+            break;
+        case 0x0A:
+            (arg[0] == 0x01) ? pulse.enableHighSignalVisRange() : pulse.disableHighSignalVisRange();
+            settings.hsvr = arg[0];
+            break;
+        case 0x0B:
+            (arg[0] == 0x01) ? pulse.enableHighSignalIrRange() : pulse.disableHighSignalIrRange();
+            settings.hsirr = arg[0];
+            break;
+        case 0x0C:
+            pulse.enableMeasurements(arg[0]); //arg[1] = Force/Auto/Pause [Force only]
+            settings.em = arg[0];
+            break;
+        case 0x0D://Start sampeling
+            /*pulse.enableInterrupt(0x0D);//PS1/2 ALS(VIS and IR)
+            pulse.clearAllInterrupts();
+            pulse.startMeasurement();
+            setTimeout(() => {
+                watchId = setWatch(() => { publishSensorReadings(); }, D8, { repeat: true, edge: 'falling' });
+            }, 1000);
+            */
+            pulse.startMeasurement();
+            watchId = setWatch(() => {
+                publishSensorReadings();
+            }, D8, { repeat: true, edge: 'falling' });
+
+            pulse.enableInterrupt(0x0D);//PS1/2 ALS(VIS and IR)
+            break;
+        case 0x0E://stop sampeling
+            pulse.pauseMeasurement();
+            pulse.disableAllInterrupts();
+            if (watchId > 0) {
+                clearWatch(watchId);
+                watchId = 0;
+            }
+            break;
+        case 0x0F://pause sampeling
+            pulse.pauseMeasurement();
+            break;
+        case 0x10://get settings
+            publishSensorSettings();
+            break;
+        case 0x11://save settings
+            saveSettings();
+            break;
+    }
+}
+
+
+const setupBLEServices = () => {
+    NRF.setServices({
+        'f8b23a4d-89ad-4220-8c9f-d81756009f0e': {
+            'f8b23a4d-89ad-4220-8c9f-d81756009f0e': {
+                description: 'ODX command characteristic',
+                writable: true,
+                value: [new Int8Array(8)],
+                onWrite: function (evt) {
+                    console.log(evt.data)
+                    var cmd = evt.data[0];
+                    var arg = new Int8Array(evt.data, 1, evt.data.length - 1);
+                    executeCommand(cmd, arg);
+                }
+            },
+            'f8b23a4d-89ad-4220-8c9f-d81756009f0a': {
+                description: 'ODX data characteristic',
+                notify: true,
+                readable: true,
+                value: [new Int8Array(8)],
+            },
+            'f8b23a4d-89ad-4220-8c9f-d81756009f0b': {
+                description: 'ODX info characteristic',
+                notify: true,
+                readable: true,
+                value: [new Int8Array(20)],
+            }
+        }
+    });
+};
+
+function getPulseData() {
+    let data = new Int8Array(8);
+    var s = pulse.getInterruptStatus()[0];
+    pulse.clearAllInterrupts();
+
+    if (s & 0x01) {
+        data.set(pulse.getAlsVisData(), 0);
+        data.set(pulse.getAlsIrData(), 2);
+    }
+    if (s & 0x04) data.set(pulse.getPs1Data(), 4);
+    if (s & 0x08) data.set(pulse.getPs2Data(), 6);
+    return data;
+}
+
+const publishSensorReadings = () => {
+    NRF.updateServices({
+        'f8b23a4d-89ad-4220-8c9f-d81756009f0e': {
+            'f8b23a4d-89ad-4220-8c9f-d81756009f0a': {
+                notify: true,
+                readable: true,
+                value: [getPulseData()]
+            }
+        }
+    });
+}
+
+module.exports = (sensor) => {
+    pulse = sensor;
+    const app = {
+        onHome: () => {
+
+        },
+        onSlide: (e) => {
+
+        },
+        onTap: (e) => {
+
+        },
+        stop: () => {
+            if (watchId > 0) {
+                clearWatch(watchId);
+                watchId = 0;
+            }
+            pulse.disableAllInterrupts();
+            pulse.disableHighSignalVisRange();
+            pulse.disableHighSignalIrRange();
+            pulse.setMeasurementRate(0);
+            isStarted = false;
+        },
+        start: () => {
+            var promise = new Promise(function (resolve, reject) {
+                pulse.resetSensor();
+                initPulseSensotFromSettings();
+                pulse.setLEDCurrent(0x77);
+                setTimeout(function () {
+                    setupBLEServices();
+                    isStarted = true;
+                    resolve();
+                }, 500);
+            });
+            return promise;
+        },
+        /*tStartSampling: () => {
+            pulse.enableMeasurements(0b00000011, 0b00001100);
+            pulse.clearAllInterrupts();
+            watchId = setWatch(() => { publishSensorReadings(); }, D8, { repeat: true, edge: 'falling' });
+            pulse.enableInterrupt(0x0D);
+            pulse.setMeasurementRate(1);
+        },*/
+        publishSensorReadings: publishSensorReadings,
+    };
+    return app;
+}

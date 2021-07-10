@@ -9,9 +9,9 @@ Date.prototype.toTimestamp = function () {
 function addSensorDataToStorage(data) {
     if (data != undefined) {
         if (localStorage.csv == undefined || localStorage.csv == "") {
-            localStorage.csv = ",,,,,,\n";
+            localStorage.csv = ",,,,,\n";
         }
-        localStorage.csv += `${new Date().toTimestamp()},${data[0]},${data[1]},${data[2]},${data[3]},${data[4]}\n`;
+        localStorage.csv += `${new Date().toTimestamp()},${data[0]},${data[1]},${data[2]},${data[3]}\n`;
         isStorageHasData = true;
     }
 }
