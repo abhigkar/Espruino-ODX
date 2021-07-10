@@ -1,0 +1,46 @@
+var wdint = setInterval(E.kickWatchdog, 5000); // 5 secs
+E.enableWatchdog(10, false); // 20 secs
+E.kickWatchdog();
+
+const pins = {
+    KX022_SDA: D3,
+    KX022_SLC: D5,
+    KX022_EN: D6,
+
+    SI1142_SCL: D9,
+    SI1142_SDA: D10,
+    SI1142_LED: D18,
+
+    S263_SCL: D15,
+    S263_SDA: D16,
+    S263_RDY: D17,
+
+    MOTOR: D25,
+
+    CHARG_L: D14,
+    CHARG_H: D21,
+
+    BATTERY: D29,
+
+    OLED_PWR: D26,
+    OLED_CS: D19,
+    OLED_RST: D20,
+    OLED_DC: D22,
+    OLED_MX25_CLK: D30,
+    OLED_MX25_MOSI: D31
+};
+
+var hrm = require("si1142v4");
+
+var hrI2C = new I2C();
+
+hrI2C.setup({ sda: pins.SI1142_SDA, scl: pins.SI1142_SCL });
+const pulse = hrm({i2c:hrI2C, LedPin:pins.SI1142_LED});
+
+var odx = require("odxc")(pulse);
+
+odx.start().then(()=>console.log("Started"));
+
+NRF.on('disconnect', function(reason) {
+    odx.stop();
+});

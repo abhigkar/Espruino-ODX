@@ -2,64 +2,318 @@
 <html>
 
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="css/bulma.css" />
-    <script src="libs/plotly-latest.js"></script>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="css/button.css" />
+	<link rel="stylesheet" href="css/simple-grid.css" />
+	<link rel="stylesheet" href="css/app.css" />
+	<script src="libs/plotly-latest.js"></script>
 </head>
 
 <body>
-
-    <button id="btnConnect" onclick="connect()">Connect!</button>
-	<button id="btnDisconnect" onclick="disconnect()" disabled>Disconnect!</button>
-    <button id="btnLed" onclick="ControlLed(this);" value="1" disabled>LED on</button>
-	<button id="btnSampling" onclick="Sampling(this);" value="1" disabled>Start sampling</button>
-	<select id="ddlSampleRate" onchange="changeSampleRate(this);">
-		<option value="10">10 ms</option>
-		<option value="20">20 ms</opttion>
-		<option value="50">50 ms</option>
-		<option value="100">100 ms</option>
-	</select>
-	<br/>
-    <button id="btnClear" onclick="clearIt()">Clear the graphs!</button>
-	<button id="btnGenerateCSV" onclick="generateCsvFromStorage()" disabled>Generate CSV</button>
-	<br/>
-	Device Name: <span id="devNameSpan" style="background-color:green;color:white"></span>
-	
-    <hr />
-	<input type="radio" id="vison" name="vis" value="1" checked onClick="sendPhotodetectorSelection(this);">
-	<label for="vison">Vis on</label>
-	<input type="radio" id="visoff" name="vis" value="0" onClick="sendPhotodetectorSelection(this);">
-	<label for="visoff">Vis off</label>
-	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-	<input type="radio" id="iron" name="ir" value="1" checked onClick="sendPhotodetectorSelection(this);">
-	<label for="iron">IR on</label>
-	<input type="radio" id="iroff" name="ir" value="0" onClick="sendPhotodetectorSelection(this);">
-	<label for="iroff">IR off</label>
-	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-	<input type="radio" id="ps1on" name="ps1" value="1" checked onClick="sendPhotodetectorSelection(this);">
-	<label for="ps1on">PS1 on</label>
-	<input type="radio" id="ps1off" name="ps1" value="0" onClick="sendPhotodetectorSelection(this);">
-	<label for="ps1off">PS1 off</label>
-	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-	<input type="radio" id="ps2on" name="ps2" value="1" checked onClick="sendPhotodetectorSelection(this);">
-	<label for="ps2on">PS2 on</label>
-	<input type="radio" id="ps2off" name="ps2" value="0" onClick="sendPhotodetectorSelection(this);">
-	<label for="ps2off">PS2 off</label>
-	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-	<input type="radio" id="ps3on" name="ps3" value="1" checked onClick="sendPhotodetectorSelection(this);">
-	<label for="ps3on">PS3 on</label>
-	<input type="radio" id="ps3off" name="ps3" value="0" onClick="sendPhotodetectorSelection(this);">
-	<label for="ps3off">PS3 off</label>
-	<hr/>
-    
-	<div id="ps1Div" style="width: 100%;"></div>
-	<div id="ps2Div" style="width: 100%;"></div>
-	<div id="ps3Div" style="width: 100%;"></div>
-    <div id="visDiv" style="width: 100%;"></div>
-	<div id="irDiv" style="width: 100%;"></div>
-	<script src="storage.js"></script>
-    <script src="receive.js"></script>
+	<div class="wrapper">
+		<div class="header">
+			<div>
+				<div class="logo"></div>
+			</div>
+		</div>
+		<div class="sidebar-1">
+			<div class="sticky-spacer"></div>
+			<div class="sticky-content">
+				<div class="container">
+					<div class="row notConnected" style="display:block;">
+						Device not connected
+					</div>
+					<div class="connected" style="display:none;">
+					<div class="row collapsible">
+						<div class="col-6"> Proximity </div>
+						<div class="col-6">
+							<div class="toggle-button-cover">
+								<div class="button-cover">
+									<div class="toggle-button b2 type3" id="button-10">
+										<input type="checkbox" name="rd1" class="checkbox" id="rdPsChannel" value="1" onClick="setPSChannel(this); toggleCollapsible(this);">
+										<div class="knobs"> <span>ON</span> </div>
+										<div class="layer"></div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="row collapsible-content">
+						<div class="row">
+							<div class="col-6"> High Resolution </div>
+							<div class="col-6">
+								<div class="toggle-button-cover">
+									<div class="button-cover">
+										<div class="toggle-button b2 type1" id="button-10">
+											<input type="checkbox" name="rdHighResPS" class="checkbox" value="1" id="rdHighResPS" onClick="setHighResolution(this);">
+											<div class="knobs"> <span>YES</span> </div>
+											<div class="layer"></div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-6"> High Signal Range </div>
+							<div class="col-6">
+								<div class="toggle-button-cover">
+									<div class="button-cover">
+										<div class="toggle-button b2 type1" id="button-10">
+											<input type="checkbox" name="rdHighSigPS" class="checkbox" id="rdHighSigPS" value="1" onClick="setHighSignalRange(this);">
+											<div class="knobs"> <span>YES</span> </div>
+											<div class="layer"></div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-6"> Set Gain </div>
+							<div class="col-6">
+								<select id="ddlPSADCGain" class="drpDown" onchange="setPSADCGain(this);">
+									<option value="0">0</option>
+									<option value="1">1</option>
+									<!--
+									<option value="2">2</opttion>
+									<option value="3">3</option>
+									<option value="4">4</option>
+									<option value="5">5</option>
+									-->
+								</select>
+							</div>
+						</div>
+					</div>
+					<div class="row collapsible">
+						<div class="col-6"> ALS </div>
+						<div class="col-6">
+							<div class="toggle-button-cover">
+								<div class="button-cover">
+									<div class="toggle-button b2 type3" id="button-10">
+										<input type="checkbox" name="rd1" class="checkbox" id="rdAlsChannel" value="2" onClick="setALSChannel(this);toggleCollapsible(this);">
+										<div class="knobs"> <span>ON</span> </div>
+										<div class="layer"></div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="row collapsible-content">
+						<div class="row">
+							<div class="col-12"> <span style="text-decoration:underline;">Visual Light</span></div>
+						</div>
+						<div class="row">
+							<div class="col-6"> High Resolution </div>
+							<div class="col-6">
+								<div class="toggle-button-cover">
+									<div class="button-cover">
+										<div class="toggle-button b2 type1" id="button-10">
+											<input type="checkbox" name="rdHighResALSVis" class="checkbox" id="rdHighResALSVis" value="2" onClick="setHighResolution(this);">
+											<div class="knobs"> <span>YES</span> </div>
+											<div class="layer"></div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-6"> High Signal Range </div>
+							<div class="col-6">
+								<div class="toggle-button-cover">
+									<div class="button-cover">
+										<div class="toggle-button b2 type1" id="button-10">
+											<input type="checkbox" name="rdHighSigALSVis" class="checkbox" id="rdHighSigALSVis" value="2" onClick="setHighSignalRange(this);">
+											<div class="knobs"> <span>YES</span> </div>
+											<div class="layer"></div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-6"> Set Gain </div>
+							<div class="col-6">
+								<select id="ddlALSVisADCGain" class="drpDown" onchange="setALSVisADCGain(this);">
+									<option value="0">0</option>
+									<option value="1">1</option>
+									<option value="2">2</opttion>
+									<option value="3">3</option>
+									<option value="4">4</option>
+									<option value="5">5</option>
+									<option value="6">6</option>
+									<option value="7">7</option>
+								</select>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-12"> <span style="text-decoration:underline;">Infrared Light</span></div>
+						</div>
+						<div class="row">
+							<div class="col-6"> High Resolution </div>
+							<div class="col-6">
+								<div class="toggle-button-cover">
+									<div class="button-cover">
+										<div class="toggle-button b2 type1" id="button-10">
+											<input type="checkbox" name="rdHighResALSIR" class="checkbox" id="rdHighResALSIR" value="3" onClick="setHighResolution(this);">
+											<div class="knobs"> <span>YES</span> </div>
+											<div class="layer"></div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-6"> High Signal Range </div>
+							<div class="col-6">
+								<div class="toggle-button-cover">
+									<div class="button-cover">
+										<div class="toggle-button b2 type1" id="button-10">
+											<input type="checkbox" name="rdHighSigALSIr" class="checkbox" id="rdHighSigALSIr" value="3" onClick="setHighSignalRange(this);">
+											<div class="knobs"> <span>YES</span> </div>
+											<div class="layer"></div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-6"> Set Gain </div>
+							<div class="col-6">
+								<select id="ddlALSIrADCGain" class="drpDown" onchange="setALSIRADCGain(this);">
+									<option value="0">0</option>
+									<option value="1">1</option>
+									<option value="2">2</opttion>
+									<option value="3">3</option>
+									<option value="4">4</option>
+									<option value="5">5</option>
+									<option value="6">6</option>
+									<option value="7">7</option>
+								</select>
+							</div>
+						</div>
+					</div>
+					<div class="row collapsible" onClick="toggleCollapsible(this);">
+						<div class="col-12"> Advance Settings </div>
+					</div>
+					<div class="row collapsible-content">
+						<div class="row">
+							<div class="col-6">PS Diode Type </div>
+							<div class="col-6">
+								<div class="toggle-button-cover">
+									<div class="button-cover">
+										<div class="toggle-button b2 type2" id="button-10">
+											<input type="checkbox" name="rdPSDiode" class="checkbox" id="rdPSDiode" value="1" onClick="selectDiode(this);">
+											<div class="knobs"> <span>SML</span> </div>
+											<div class="layer"></div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-6">ALS Diode Type </div>
+							<div class="col-6">
+								<div class="toggle-button-cover">
+									<div class="button-cover">
+										<div class="toggle-button b2 type2" id="button-10">
+											<input type="checkbox" name="rdALSDiode" class="checkbox" id="rdPSDiode" value="2" onClick="selectDiode(this);">
+											<div class="knobs"> <span>SML</span> </div>
+											<div class="layer"></div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="content">
+			<div class="sticky-spacer"></div>
+			<div class="sticky-content">
+				<div id="ps1Div" style="width: 100%;"></div>
+				<div id="ps2Div" style="width: 100%;"></div>
+				<div id="visDiv" style="width: 100%;"></div>
+				<div id="irDiv" style="width: 100%;"></div>
+			</div>
+		</div>
+		<div class="footer">
+			<div class="container">
+				<div class="row" style="text-align:right;">
+					<div class="col-1">
+						<button id="btnConnect" class="ripple-green green" onClick="connect();">Connect</button>
+						<button id="btnDisconnect" class="ripple-green green" onClick="disconnect();" style="display:none;">Disconnect</button>
+					</div>
+					<div class="col-2">
+						<button id="btnStart" class="ripple-green green connected" onClick="startMeasurement();" style="display:none;">Start</button>
+						<button id="btnPause" class="ripple-green green connected" onClick="stopMeasurement();" style="display:none;">Pause</button>
+					</div>
+					<div class="col-2">
+						<span class="connected" style="display:none;">Measurement Rate </span>
+					</div>
+					<div class="col-1 connected">
+						<select id="ddlSampleRate" class="drpDown connected" onchange="changeSampleRate(this);" style="display:none;"> 
+							<option value="10">10 ms</option>
+							<option value="20">20 ms</opttion>
+							<option value="50">50 ms</option>
+							<option value="100">100 ms</option>
+						</select>
+					</div>
+					<div class="col-6">
+						<button class="ripple-blue blue" onClick="clearIt();">Clear Chart</button>
+						<button id="btnGenerateCSV" class="ripple-blue blue"  onclick="generateCsvFromStorage()" disabled>Generate CSV</button>
+						<button id="btnSaveSettings" class="ripple-blue blue connected"  onclick="saveSettings()">SaveSettings</button>
+						<span class="deviceInfo">Device: <span id="devNameSpan">No device connected</span></span>
+					</div>
+				</div>
+			
+			</div>
+			
+		</div>
 </body>
+<script src="libs/jquery-3.6.0.min.js"></script>
+<script src="storageController.js"></script>
+<script src="chartController.js"></script>
+<script src="odxController.js"></script>
+<script>
+function toggleCollapsible(e){
+	state= $(e).prop("checked");
+	let col= $(e).closest(".collapsible")[0];
+	col = $(col);
+	var content =  col.next();
+	if(state){
+		$(col).addClass("active");
+		content.css("display","block");
+	}
+	else{
+		$(col).removeClass("active")
+		content.css("display","none");
+	}
+	
+	/*this.classList.toggle("active");
+	var content = this.nextElementSibling;
+	if(content.style.display === "block") {
+		content.style.display = "none";
+	} else {
+		content.style.display = "block";
+	}*/
+}
+/*
+var coll = document.getElementsByClassName("collapsible");
+var i;
+for(i = 0; i < coll.length; i++) {
+	coll[i].addEventListener("click", function() {
+		this.classList.toggle("active");
+		var content = this.nextElementSibling;
+		if(content.style.display === "block") {
+			content.style.display = "none";
+		} else {
+			content.style.display = "block";
+		}
+	});
+}
+*/
+</script>
 
 </html>

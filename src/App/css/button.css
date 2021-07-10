@@ -1,0 +1,214 @@
+/* CSS rules are kept repetitive so that you can get CSS rules for each button easily :) */
+/*https://codepen.io/Mr_Rahul_Tiwari/pen/ZEWMZNV */
+.toggle-button-cover
+{
+    display: table-cell;
+    position: relative;
+    width: 100px;
+    height: 40px;
+    box-sizing: border-box;
+}
+
+.button-cover
+{
+    xheight: 100px;
+    xmargin: 20px;
+    background-color: #fff;
+    box-shadow: 0 10px 20px -8px #c5d6d6;
+    border-radius: 4px;
+}
+
+
+.button-cover, .knobs, .layer
+{
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+}
+
+.toggle-button
+{
+    position: relative;
+    top: 50%;
+    width: 74px;
+    height: 36px;
+    margin: -20px auto 0 auto;
+    overflow: hidden;
+}
+
+.button.r, .button.r .layer
+{
+    border-radius: 100px;
+}
+
+.button.b2
+{
+    border-radius: 2px;
+}
+
+.checkbox
+{
+    position: relative;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 3;
+}
+
+.knobs
+{
+    z-index: 2;
+}
+
+.layer
+{
+    width: 100%;
+    background-color: #ebf7fc;
+    transition: 0.3s ease all;
+    z-index: 1;
+}
+
+
+#button-10 .knobs:before, #button-10 .knobs:after, #button-10 .knobs span
+{
+    position: absolute;
+    top: 4px;
+    width: 20px;
+    height: 10px;
+    font-size: 10px;
+    font-weight: bold;
+    text-align: center;
+    line-height: 1;
+    padding: 9px 4px;
+    border-radius: 2px;
+    transition: 0.3s ease all;
+}
+
+.type1 .knobs:before
+{
+    content: '';
+    left: 4px;
+    background-color: #03A9F4;
+}
+
+.type1 .knobs:after
+{
+	content: 'NO';
+    right: 4px;
+    color: #4e4e4e;
+}
+
+.type2 .knobs:before
+{
+    content: '';
+    left: 4px;
+    background-color: #03A9F4;
+}
+
+.type2 .knobs:after
+{
+	content: 'LRG';
+    right: 4px;
+    color: #4e4e4e;
+}
+
+.type3 .knobs:before
+{
+    content: '';
+    left: 4px;
+    background-color: #03A9F4;
+}
+
+.type3 .knobs:after
+{
+	content: 'OFF';
+    right: 4px;
+    color: #4e4e4e;
+}
+
+#button-10 .knobs span
+{
+    display: inline-block;
+    left: 4px;
+    color: #fff;
+    z-index: 1;
+}
+
+#button-10 .checkbox:checked + .knobs span
+{
+    color: #4e4e4e;
+}
+
+#button-10 .checkbox:checked + .knobs:before
+{
+    left: 42px;
+    background-color: #F44336;
+}
+
+#button-10 .checkbox:checked + .knobs:after
+{
+    color: #fff;
+}
+
+#button-10 .checkbox:checked ~ .layer
+{
+    background-color: #fcebeb;
+}
+
+
+/* Ripple effect */
+.ripple-blue {
+  background-position: center;
+  transition: background 0.8s;
+}
+.ripple-blue:hover {
+  background: #47a7f5 radial-gradient(circle, transparent 1%, #47a7f5 1%) center/15000%;
+}
+.ripple-blue:active {
+  background-color: #6eb9f7;
+  background-size: 100%;
+  transition: background 0s;
+}
+
+.ripple-green {
+  background-position: center;
+  transition: background 0.8s;
+}
+.ripple-green:hover {
+  background: #238832 radial-gradient(circle, transparent 1%, #238832 1%) center/15000%;
+}
+.ripple-green:active {
+  background-color: #1cd827;
+  background-size: 100%;
+  transition: background 0s;
+}
+
+/* Button style */
+button {
+  border: none;
+  border-radius: 2px;
+  padding: 6px 9px;
+  font-size: 16px;
+  text-transform: uppercase;
+  cursor: pointer;
+  color: white;
+  box-shadow: 0 0 4px #999;
+  outline: none;
+}
+
+button:disabled{
+	background-color: #adafb1;
+}
+
+.blue{
+	background-color: #2196f3;
+}
+
+.green{
+	background-color: #21f340;
+}
