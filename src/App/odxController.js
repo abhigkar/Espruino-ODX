@@ -105,7 +105,28 @@ function disconnect() {
 	window.dispatchEvent(new CustomEvent("onODXDisconnect"));
 }
 
+var startTime, endTime;
+let elaspedTime=0;
+
+function start() {
+  startTime = performance.now();
+};
+
+function end() {
+	endTime = performance.now();
+	var timeDiff = endTime - startTime; //in ms 
+	// strip the ms 
+	timeDiff /= 1; 
+	
+	// get seconds 
+	var milliseconds = Math.round(timeDiff);
+	elaspedTime += milliseconds;
+	console.log(milliseconds + " msec");
+  }
+ start() 
+
 function pulseChanged(evt) {
+	end();
 	var raw = evt.target.value
 	var pulseData = new Int16Array(raw.buffer)
 	//console.log(pulseData);
@@ -113,7 +134,8 @@ function pulseChanged(evt) {
 	ir.push(pulseData[1]);
 	ps1.push(pulseData[2]);
 	ps2.push(pulseData[3]);
-	addSensorDataToStorage(pulseData);
+	addSensorDataToStorage(pulseData,elaspedTime);
+	//start();
 }
 
 
