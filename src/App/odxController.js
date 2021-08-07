@@ -82,6 +82,15 @@ function infoHandler(evt){
 	$("#rdHighResPS").prop("checked", sensorSettings[10] == 1);//hrps
 	$("#rdHighResALSVis").prop("checked", sensorSettings[11] == 1);//hrvis
 	$("#rdHighResALSIR").prop("checked", sensorSettings[12] == 1);//hrir
+	if(sensorSettings[13]>0)
+	{
+		$("#btnPause").show();
+		$("#btnStart").hide();
+	}
+	else{
+		$("#btnPause").hide();
+		$("#btnStart").show();
+	}
 	
 }
 function disconnect() {
@@ -120,7 +129,7 @@ function pulseChanged(evt) {
 	end();
 	var raw = evt.target.value
 	var pulseData = new Int16Array(raw.buffer)
-	console.log(pulseData);
+	//console.log(pulseData);
 	vis.push(pulseData[0]);
 	ir.push(pulseData[1]);
 	ps1.push(pulseData[2]);

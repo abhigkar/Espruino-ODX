@@ -284,8 +284,17 @@
 <script>
 function toggleCollapsible(e){
 	state= $(e).prop("checked");
-	let col= $(e).closest(".collapsible")[0];
-	col = $(col);
+	let col;
+	
+	if(state != undefined){
+		col= $(e).closest(".collapsible")[0];
+		col = $(col);
+	}
+	else{
+	  col = $(e);
+	  state = !(col.hasClass("active"));
+
+	}
 	var content =  col.next();
 	if(state){
 		$(col).addClass("active");
