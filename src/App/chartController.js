@@ -1,9 +1,4 @@
 //some custom eventing
-
-window.addEventListener("onSamplingStarted", function (evt) {
-	document.querySelector("#btnGenerateCSV").disabled = evt.detail == 1
-}, false);
-
 window.addEventListener("onODXConnect", function (evt) {
 	$("#btnDisconnect").show();
 	$("#btnConnect").hide();

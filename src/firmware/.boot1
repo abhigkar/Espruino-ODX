@@ -1,0 +1,18 @@
+const lcd = require("oled");
+require("Font8x12").add(Graphics);
+var spi = new SPI();
+spi.setup({ mosi: pins.OLED_MX25_MOSI, sck: pins.OLED_MX25_CLK });
+function drawSpalshScreen()
+{
+    lcdDisplay.clear();
+    lcdDisplay.setFont8x12();
+    lcdDisplay.drawImage(eval(require("Storage").read("logo.js")),10,30);
+    lcdDisplay.drawString("Espruino", 15, 128 / 2);
+    lcdDisplay.drawString(process.env.VERSION,20, (128 / 2) + 15);
+    lcdDisplay.flip();
+}
+var lcdDisplay = lcd({
+    spi: spi,
+    csPin: pins.OLED_CS, dcPin: pins.OLED_DC,
+    rstPin: pins.OLED_RST, pwrPin: pins.OLED_PWR
+});

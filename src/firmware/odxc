@@ -6,7 +6,7 @@ const odxInfoCharacteristic = "f8b23a4d-89ad-4220-8c9f-d81756009f0b";
 const s = require("Storage");
 let settings;
 var pulse;
-let watchId = 0;
+let pinWatchId = 0;
 let isStarted = false;
 function saveSettings() {
     s.writeJSON("settings", settings);
@@ -21,7 +21,7 @@ function getSettings() {
 };
 
 function publishSensorSettings() {
-    let data = new Int8Array([settings.em, settings.mr, settings.psd, settings.psgn, settings.hspsr, settings.ird, settings.alsvisgn, settings.hsvr, settings.alsirgn, settings.hsirr, settings.hrps, settings.hrvis, settings.hrir]);
+    let data = new Int8Array([settings.em, settings.mr, settings.psd, settings.psgn, settings.hspsr, settings.ird, settings.alsvisgn, settings.hsvr, settings.alsirgn, settings.hsirr, settings.hrps, settings.hrvis, settings.hrir, pinWatchId]);
     NRF.updateServices({
         'f8b23a4d-89ad-4220-8c9f-d81756009f0e': {
             'f8b23a4d-89ad-4220-8c9f-d81756009f0b': {
@@ -122,11 +122,11 @@ function executeCommand(cmd, arg) {
             pulse.clearAllInterrupts();
             pulse.startMeasurement();
             setTimeout(() => {
-                watchId = setWatch(() => { publishSensorReadings(); }, D8, { repeat: true, edge: 'falling' });
+                pinWatchId = setWatch(() => { publishSensorReadings(); }, D8, { repeat: true, edge: 'falling' });
             }, 1000);
             */
             pulse.startMeasurement();
-            watchId = setWatch(() => {
+            pinWatchId = setWatch(() => {
                 publishSensorReadings();
             }, D8, { repeat: true, edge: 'falling' });
 
@@ -135,9 +135,9 @@ function executeCommand(cmd, arg) {
         case 0x0E://stop sampeling
             pulse.pauseMeasurement();
             pulse.disableAllInterrupts();
-            if (watchId > 0) {
-                clearWatch(watchId);
-                watchId = 0;
+            if (pinWatchId > 0) {
+                clearWatch(pinWatchId);
+                pinWatchId = 0;
             }
             break;
         case 0x0F://pause sampeling
@@ -162,9 +162,13 @@ const setupBLEServices = () => {
                 value: [new Int8Array(8)],
                 onWrite: function (evt) {
                     console.log(evt.data)
-                    var cmd = evt.data[0];
-                    var arg = new Int8Array(evt.data, 1, evt.data.length - 1);
-                    executeCommand(cmd, arg);
+                    if(evt.data.length == 8){//floot32 check hack
+                        let d = new DataView(evt.data) ;
+                        executeCommand(d.getFloat32(0,true), [d.getFloat32(4,true)]);
+                    }
+                    else{
+                        executeCommand(evt.data[0], new Int8Array(evt.data, 1, evt.data.length - 1));
+                    }
                 }
             },
             'f8b23a4d-89ad-4220-8c9f-d81756009f0a': {
@@ -194,6 +198,13 @@ function getPulseData() {
     }
     if (s & 0x04) data.set(pulse.getPs1Data(), 4);
     if (s & 0x08) data.set(pulse.getPs2Data(), 6);
+
+    /*lcdDisplay.clear();
+    lcdDisplay.drawString("PS1 - " + new Int16Array(data,4,2)[0], 10,15);
+    lcdDisplay.drawString("PS1 - " + new Int16Array(data,6,2)[0], 10,30);
+    lcdDisplay.drawString("Vis - " + new Int16Array(data,0,2)[0], 10,45);
+    lcdDisplay.drawString("IR - " + new Int16Array(data,2,2)[0], 10,60);
+    lcdDisplay.flip();*/
     return data;
 }
 
@@ -222,9 +233,9 @@ module.exports = (sensor) => {
 
         },
         stop: () => {
-            if (watchId > 0) {
-                clearWatch(watchId);
-                watchId = 0;
+            if (pinWatchId > 0) {
+                clearWatch(pinWatchId);
+                pinWatchId = 0;
             }
             pulse.disableAllInterrupts();
             pulse.disableHighSignalVisRange();
@@ -234,7 +245,7 @@ module.exports = (sensor) => {
         },
         start: () => {
             var promise = new Promise(function (resolve, reject) {
-                pulse.resetSensor();
+                pulse.initSensor();
                 initPulseSensotFromSettings();
                 pulse.setLEDCurrent(0x77);
                 setTimeout(function () {
@@ -248,7 +259,7 @@ module.exports = (sensor) => {
         /*tStartSampling: () => {
             pulse.enableMeasurements(0b00000011, 0b00001100);
             pulse.clearAllInterrupts();
-            watchId = setWatch(() => { publishSensorReadings(); }, D8, { repeat: true, edge: 'falling' });
+            pinWatchId = setWatch(() => { publishSensorReadings(); }, D8, { repeat: true, edge: 'falling' });
             pulse.enableInterrupt(0x0D);
             pulse.setMeasurementRate(1);
         },*/
